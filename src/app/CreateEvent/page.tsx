@@ -2,8 +2,34 @@
 
 import { AppShell } from "@/components/AppShell";
 import { EndpointForm } from "@/components/EndpointForm";
-import { EndpointTable } from "@/components/EndpointTable";
 
 export default function Page() {
-  return (<AppShell><EndpointForm title="Crear nuevo evento" endpoint="CreateEvent" fields={[{"name": "IdOrganizer", "label": "IdOrganizer", "type": "number", "defaultValue": ""}, {"name": "Name", "label": "Nombre", "type": "text", "defaultValue": ""}, {"name": "IdEventCategory", "label": "Categoría", "type": "number", "defaultValue": ""}, {"name": "Description", "label": "Descripción", "type": "textarea", "defaultValue": ""}, {"name": "keyWords", "label": "Palabras clave", "type": "text", "defaultValue": ""}, {"name": "NamePlace", "label": "Lugar", "type": "text", "defaultValue": ""}, {"name": "Street", "label": "Calle", "type": "text", "defaultValue": ""}, {"name": "NumExt", "label": "Número exterior", "type": "text", "defaultValue": ""}, {"name": "IdState", "label": "Estado", "type": "number", "defaultValue": ""}, {"name": "IdNeighborhood", "label": "Colonia", "type": "number", "defaultValue": ""}, {"name": "LinkMap", "label": "Link mapa", "type": "text", "defaultValue": ""}, {"name": "Latitude", "label": "Latitud", "type": "text", "defaultValue": ""}, {"name": "Longitude", "label": "Longitud", "type": "text", "defaultValue": ""}, {"name": "EventDate", "label": "Fecha inicio", "type": "datetime-local", "defaultValue": ""}, {"name": "EventDateEnd", "label": "Fecha fin", "type": "datetime-local", "defaultValue": ""}, {"name": "Address", "label": "Dirección", "type": "text", "defaultValue": ""}, {"name": "IdStatus", "label": "Estatus", "type": "number", "defaultValue": ""}, {"name": "EventOwner", "label": "Responsable", "type": "text", "defaultValue": ""}]} /></AppShell>);
+  return (
+    <AppShell>
+      <EndpointForm
+        title="Crear nuevo evento"
+        endpoint="CreateEvent"
+        fields={[
+          { name: "IdOrganizer", label: "IdOrganizer", type: "number", defaultValue: "" },
+          { name: "Name", label: "Nombre", type: "text", defaultValue: "" },
+          { name: "IdEventCategory", label: "Categoría", type: "number", defaultValue: "" },
+          { name: "Description", label: "Descripción", type: "textarea", defaultValue: "" },
+          { name: "keyWords", label: "Palabras clave", type: "text", defaultValue: "" },
+          { name: "NamePlace", label: "Lugar", type: "text", defaultValue: "" },
+          { name: "Street", label: "Calle", type: "text", defaultValue: "" },
+          { name: "NumExt", label: "Número exterior", type: "text", defaultValue: "" },
+          { name: "IdState", label: "Estado", type: "number", defaultValue: "" },
+          { name: "IdNeighborhood", label: "Colonia", type: "number", defaultValue: "" },
+          { name: "LinkMap", label: "Link mapa", type: "text", defaultValue: "" },
+          { name: "Latitude", label: "Latitud", type: "text", defaultValue: "" },
+          { name: "Longitude", label: "Longitud", type: "text", defaultValue: "" },
+          { name: "EventDate", label: "Fecha inicio", type: "datetime-local", defaultValue: "" },
+          { name: "EventDateEnd", label: "Fecha fin", type: "datetime-local", defaultValue: "" },
+          { name: "Address", label: "Dirección", type: "text", defaultValue: "" },
+          { name: "IdStatus", label: "Estatus", type: "number", defaultValue: "" },
+          { name: "EventOwner", label: "Responsable", type: "text", defaultValue: "" },
+        ]}
+      />
+    </AppShell>
+  );
 }

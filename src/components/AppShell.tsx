@@ -25,17 +25,39 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="acura-shell">
-      <aside className="acura-sidebar">
-        <img src="/img/eventize.png" alt="Eventize" />
-        {navItems.map(([label, href]) => (
-          <Link key={href} href={href} style={{ background: pathname === href ? "#1d2939" : undefined, color: pathname === href ? "white" : undefined }}>
-            {label}
-          </Link>
-        ))}
-        <button className="acura-button secondary" style={{ width: "100%", marginTop: 16 }} onClick={logout}>Cerrar sesión</button>
+    <div className="flex min-h-screen bg-[#f4f6fb]">
+      <aside className="sticky top-0 h-screen w-[250px] overflow-y-auto bg-slate-900 px-5 py-6 text-white">
+        <img src="/img/eventize.png" alt="Eventize" className="mb-8 max-w-[150px]" />
+
+        <nav className="space-y-1">
+          {navItems.map(([label, href]) => {
+            const active = pathname === href;
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`block rounded-xl px-3 py-2 text-sm transition ${active
+                  ? "bg-slate-700 text-white"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <button
+          type="button"
+          onClick={logout}
+          className="mt-6 w-full rounded-full border border-slate-600 bg-white px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
+        >
+          Cerrar sesión
+        </button>
       </aside>
-      <main className="acura-main">{children}</main>
+
+      <main className="flex-1 p-7">{children}</main>
     </div>
   );
 }

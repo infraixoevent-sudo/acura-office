@@ -1,6 +1,11 @@
 /* Auto-migrated from Blazor C# Request/Response/dto classes. */
+
 export type ApiPrimitive = string | number | boolean | null;
-export interface LegacyApiResponse { [key: string]: unknown; }
+
+export interface LegacyApiResponse {
+  [key: string]: unknown;
+}
+
 export interface RCancelEvent {
   idEvent?: string;
   Comment?: string;
@@ -81,8 +86,7 @@ export interface REditEvent {
   EventOwner?: string;
   IdNeighborhood: number;
   IdState: number;
-  EventImage?: string;
-  EventImage: string | number[];
+  EventImage?: string | number[];
   imageOrder?: string;
   keyWords?: string;
   placeName?: string;
@@ -149,7 +153,7 @@ export interface RGetUserbyEmail {
 }
 
 export interface RLogIn {
-  Email: string;
+  email: string;
   Pass: string;
   IsAdmin: boolean;
 }
@@ -525,7 +529,7 @@ export interface TicketOrganizerList {
 export interface Ticketing {
   Code: boolean;
   Message?: string;
-  ticketsList?: TicketsList[];
+  ticketsList?: TicketList[];
 }
 
 export interface TicketsSellingR {
