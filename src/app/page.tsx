@@ -133,7 +133,7 @@ export default function LoginPage() {
             href="/RecoverPassword"
             className="text-sm font-medium text-slate-700 hover:text-slate-950 hover:underline"
           >
-            Recuperar contraseña
+            Recuperar contraseña.
           </a>
         </div>
       </section>
