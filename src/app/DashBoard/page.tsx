@@ -17,25 +17,38 @@ interface DashboardEvent {
 }
 
 interface DashboardResponse {
-  code: boolean;
-  message: string | null;
-  dashboardEvents: DashboardEvent[];
-  totalDePaginas: number;
-  totalDeRegistros: number;
+  code?: boolean;
+  Code?: boolean;
+  message?: string | null;
+  Message?: string | null;
+  dashboardEvents?: DashboardEvent[];
+  totalDePaginas?: number;
+  totalDeRegistros?: number;
 }
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(value);
+  }).format(value || 0);
 }
 
 function formatDate(value: string) {
   if (!value) return "";
 
-  const [datePart] = value.split(" ");
-  const [year, month, day] = datePart.split("/");
+  const rawDate = value.split(" ")[0];
+
+  let year = "";
+  let month = "";
+  let day = "";
+
+  if (rawDate.includes("-")) {
+    [year, month, day] = rawDate.split("-");
+  } else if (rawDate.includes("/")) {
+    [year, month, day] = rawDate.split("/");
+  } else {
+    return value;
+  }
 
   const months: Record<string, string> = {
     "01": "Enero",
@@ -52,18 +65,35 @@ function formatDate(value: string) {
     "12": "Diciembre",
   };
 
-  return `${day}/${months[month]}/${year}`;
+  return `${day}/${months[month] ?? month}/${year}`;
+}
+
+function normalizeEvent(event: any): DashboardEvent {
+  return {
+    idEvent: Number(event?.idEvent ?? 0),
+    eventName: String(event?.eventName ?? ""),
+    soldTickets: Number(event?.soldTickets ?? 0),
+    availableTickets: Number(event?.availableTickets ?? 0),
+    eventDateStart: String(event?.eventDateStart ?? ""),
+    eventDateSale: String(event?.eventDateSale ?? ""),
+    eventProfits: Number(event?.eventProfits ?? 0),
+    eventPercentage: Number(event?.eventPercentage ?? 0),
+    totalTickets: Number(
+      event?.totalTickets ??
+      Number(event?.soldTickets ?? 0) + Number(event?.availableTickets ?? 0)
+    ),
+  };
 }
 
 function EventPercentageCard({ event }: { event: DashboardEvent }) {
-  const percentage = Math.max(0, Math.min(event.eventPercentage || 0, 100));
+  const percentage = Math.max(0, Math.min(Number(event.eventPercentage || 0), 100));
   const radius = 72;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
 
   return (
     <article className="flex h-[315px] w-[275px] flex-col items-center rounded-lg bg-white px-6 py-6 shadow-[0_18px_35px_rgba(15,23,42,0.12)]">
-      <h3 className="mb-7 max-w-[220px] text-center text-lg font-extrabold leading-5 text-black">
+      <h3 className="mb-7 max-w-[220px] text-center text-lg font-extrabold leading-6 text-black">
         {event.eventName}
       </h3>
 
@@ -74,7 +104,7 @@ function EventPercentageCard({ event }: { event: DashboardEvent }) {
             cy="90"
             r={radius}
             fill="none"
-            stroke="#a9a9a9"
+            stroke="#b3b3b3"
             strokeWidth="20"
           />
           <circle
@@ -90,7 +120,7 @@ function EventPercentageCard({ event }: { event: DashboardEvent }) {
           />
         </svg>
 
-        <div className="absolute inset-0 flex items-center justify-center text-2xl font-medium text-black">
+        <div className="absolute inset-0 flex items-center justify-center text-[22px] font-medium text-black">
           {percentage}%
         </div>
       </div>
@@ -106,11 +136,10 @@ export default function Page() {
   const [error, setError] = useState("");
 
   const idOrganizer = useMemo(() => {
-    if (typeof window === "undefined") return 1;
+    if (typeof window === "undefined") return 0;
 
     const storedIdOrganizer = Number(localStorage.getItem("IdOrganizer"));
-
-    return storedIdOrganizer > 0 ? storedIdOrganizer : 1;
+    return storedIdOrganizer > 0 ? storedIdOrganizer : 0;
   }, []);
 
   async function loadDashboard(currentPage = page) {
@@ -122,20 +151,30 @@ export default function Page() {
         "GetDashboardEvents",
         {
           IdOrganizer: idOrganizer,
-          Page: currentPage,
+          Page: currentPage - 1,
         },
         getStoredToken()
       );
 
-      if (!response.code) {
-        setError(response.message || "No se pudo cargar el dashboard");
+      const success = response.code ?? response.Code ?? false;
+      const message = response.message ?? response.Message ?? null;
+      const dashboardEvents = Array.isArray(response.dashboardEvents)
+        ? response.dashboardEvents.map(normalizeEvent)
+        : [];
+
+      if (!success) {
+        setError(message || "No se pudo cargar el dashboard");
+        setEvents([]);
+        setTotalPages(1);
         return;
       }
 
-      setEvents(response.dashboardEvents || []);
-      setTotalPages(response.totalDePaginas || 1);
+      setEvents(dashboardEvents);
+      setTotalPages(Number(response.totalDePaginas ?? 1));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      setEvents([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -158,9 +197,7 @@ export default function Page() {
   return (
     <AppShell>
       <section className="bg-white px-2 py-2">
-        <h1 className="mb-5 text-[28px] font-extrabold text-black">
-          Resumen
-        </h1>
+        <h1 className="mb-5 text-[28px] font-extrabold text-black">Resumen</h1>
 
         <h2 className="mb-7 text-lg font-bold text-black">
           Porcentaje de ventas
