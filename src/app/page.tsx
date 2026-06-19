@@ -7,7 +7,7 @@ import { setSessionValues } from "@/lib/apiClient";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const [Email, setEmail] = useState("");
   const [Pass, setPass] = useState("");
   const [IsAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -34,7 +34,7 @@ export default function LoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
+          Email,
           Pass,
           IsAdmin,
         }),
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
                 <input
                   type="email"
-                  value={email}
+                  value={Email}
                   onChange={(event) => setEmail(event.target.value)}
                   required
                   placeholder="Correo electrónico"

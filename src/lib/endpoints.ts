@@ -31,6 +31,7 @@ export const legacyEndpoints = {
   "GetInvoice": "user",
   "GetNeighborhoodsByZipCode": "events",
   "GetRolesByOrganizer": "user",
+  "CreateOrganizerRole": "user",
   "GetAvailableRoleViews": "user",
   "CreateUser": "user",
   "DeleteUserAccount": "user",
