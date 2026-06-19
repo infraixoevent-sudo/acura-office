@@ -43,11 +43,11 @@ export interface RCreateEvent {
 }
 
 export interface RCreateRole {
-  email: string;
-  name: string;
-  idRole: number;
-  idUser: number;
-  idOrganizer: number;
+  Email: string;
+  Name: string;
+  IdRole: number;
+  IdUser: number;
+  IdOrganizer: number;
 }
 
 export interface RCreateTicket {
@@ -149,11 +149,11 @@ export interface RGetTicketByFolio {
 }
 
 export interface RGetUserbyEmail {
-  email: string;
+  Email: string;
 }
 
 export interface RLogIn {
-  email: string;
+  Email: string;
   Pass: string;
   IsAdmin: boolean;
 }
@@ -304,6 +304,8 @@ export interface GenericR {
   Code: boolean;
   Message: string;
   IdEvent: string;
+  code: boolean;
+  message: string;
 }
 
 export interface GetAdminEventByIdEventR {
@@ -463,10 +465,10 @@ export interface GetUserbyEmailRR {
 }
 
 export interface GetUserbyEmailR {
-  userName: string;
-  idUser: number;
   code: boolean;
   message: string;
+  UserName?: string;
+  IdUser?: number;
 }
 
 export interface LogInR {
@@ -599,4 +601,26 @@ export interface SelectedTicket {
   IdTicketClass: number;
   Name: string;
   Quantity: number;
+}
+
+export interface RoleView {
+  IdView: number;
+  Description?: string;
+  URL: string;
+  IsMenu?: number;
+  IsMain?: number;
+  Main?: number;
+  IsApp: number;
+}
+
+export interface GetAvailableRoleViewsR {
+  code: boolean;
+  message: string;
+  Views: RoleView[];
+}
+
+export interface RCreateOrganizerRole {
+  Description: string;
+  IdOrganizer: number;
+  Views: number[];
 }
