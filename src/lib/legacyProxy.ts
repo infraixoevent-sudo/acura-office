@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { legacyEndpoints, type LegacyEndpoint } from "@/lib/endpoints";
+import { legacyEndpoints, type LegacyEndpoint, type LegacyService } from "@/lib/endpoints";
+
+const envVarNameByService: Record<LegacyService, string> = {
+  user: "NEXT_PUBLIC_ACURA_USERS_API_URL",
+  events: "NEXT_PUBLIC_ACURA_EVENTS_API_URL",
+  admin: "NEXT_PUBLIC_ACURA_ADMIN_API_URL",
+};
+
+const fallbackUrlByService: Record<LegacyService, string> = {
+  user: "https://acura-user.vantis.team",
+  events: "https://acura-events.vantis.team",
+  admin: "https://acura-admin.vantis.team",
+};
 
 function getBaseUrl(endpoint: LegacyEndpoint) {
   const service = legacyEndpoints[endpoint];
+  const value = process.env[envVarNameByService[service]];
 
-  const value =
-    service === "user"
-      ? process.env.NEXT_PUBLIC_ACURA_USERS_API_URL
-      : process.env.NEXT_PUBLIC_ACURA_EVENTS_API_URL;
-
-  const fallback =
-    service === "user"
-      ? "https://acura-user.vantis.team"
-      : "https://acura-events.vantis.team";
-
-  return (value || fallback).replace(/\/$/, "");
+  return (value || fallbackUrlByService[service]).replace(/\/$/, "");
 }
 
 export async function proxyLegacyEndpoint(

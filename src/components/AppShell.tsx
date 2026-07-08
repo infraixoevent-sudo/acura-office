@@ -76,12 +76,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [eventsOpen, setEventsOpen] = useState(
     pathname === "/Events" ||
     pathname === "/CreateEvent" ||
-    pathname === "/Reports" ||
+    pathname === "/ReportsByEvent" ||
     pathname === "/Cashier/CashierEvent"
   );
 
   const [reportsOpen, setReportsOpen] = useState(
-    pathname === "/Reports" || pathname === "/Cashier/CashierEvent"
+    pathname === "/ReportsByEvent" || pathname === "/Cashier/CashierEvent"
   );
 
   const [teamOpen, setTeamOpen] = useState(
@@ -185,7 +185,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {reportsOpen ? (
                   <div className="space-y-5 pl-0">
                     <Link
-                      href="/Reports"
+                      href="/ReportsByEvent"
                       className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
                     >
                       Órdenes

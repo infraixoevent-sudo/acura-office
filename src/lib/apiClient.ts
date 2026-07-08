@@ -1,19 +1,26 @@
-import { legacyEndpoints, type LegacyEndpoint } from "@/lib/endpoints";
+import { legacyEndpoints, type LegacyEndpoint, type LegacyService } from "@/lib/endpoints";
+
+const envVarNameByService: Record<LegacyService, string> = {
+  user: "NEXT_PUBLIC_ACURA_USERS_API_URL",
+  events: "NEXT_PUBLIC_ACURA_EVENTS_API_URL",
+  admin: "NEXT_PUBLIC_ACURA_ADMIN_API_URL",
+};
+
+// Next.js only inlines NEXT_PUBLIC_* vars for client bundles when referenced
+// via a literal `process.env.NEXT_PUBLIC_X` expression, so each one must be
+// read explicitly here rather than through a computed `process.env[name]` lookup.
+const envValueByService: Record<LegacyService, string | undefined> = {
+  user: process.env.NEXT_PUBLIC_ACURA_USERS_API_URL,
+  events: process.env.NEXT_PUBLIC_ACURA_EVENTS_API_URL,
+  admin: process.env.NEXT_PUBLIC_ACURA_ADMIN_API_URL,
+};
 
 function getBaseUrl(endpoint: LegacyEndpoint) {
   const service = legacyEndpoints[endpoint];
-
-  const value =
-    service === "user"
-      ? process.env.NEXT_PUBLIC_ACURA_USERS_API_URL
-      : process.env.NEXT_PUBLIC_ACURA_EVENTS_API_URL;
+  const value = envValueByService[service];
 
   if (!value) {
-    throw new Error(
-      service === "user"
-        ? "Missing NEXT_PUBLIC_ACURA_USERS_API_URL"
-        : "Missing NEXT_PUBLIC_ACURA_EVENTS_API_URL"
-    );
+    throw new Error(`Missing ${envVarNameByService[service]}`);
   }
 
   return value.replace(/\/$/, "");
