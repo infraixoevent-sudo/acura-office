@@ -264,6 +264,33 @@ export interface EventsOrganizerList {
   IdEvent: number;
 }
 
+export interface RGetTicketsReport {
+  idUser: number;
+  idEvent: number;
+  startDate: string;
+  endDate: string;
+  folio?: string;
+  email?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface GetTicketsReportR {
+  Code: boolean;
+  Message?: string;
+  Tickets?: TicketsList[];
+  TotalElements: number;
+  TotalPages: number;
+}
+
+export interface TicketsList {
+  IdOrder: number;
+  Amount: number;
+  Status: string | null;
+  Quantity: number;
+  PDFURL?: string | null;
+}
+
 export interface Status {
   IdStatus: string;
   StatusName?: string;

@@ -1,6 +1,7 @@
-export type LegacyService = "user" | "events";
+export type LegacyService = "user" | "events" | "admin";
 
 export const legacyEndpoints = {
+  "GetTicketsReport": "admin",
   "GetCancelInformation": "events",
   "CancelEvent": "events",
   "CreateEvent": "events",

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import { AppShell } from "@/components/AppShell";
+import { Pagination } from "@/components/Pagination";
 import { getStoredToken, postLegacy } from "@/lib/apiClient";
 import type {
   UserRoles,
@@ -91,6 +92,8 @@ export default function UsersPage() {
   const [hasUsers, setHasUsers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("add");
@@ -105,10 +108,10 @@ export default function UsersPage() {
   const [emailLookupLoading, setEmailLookupLoading] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadData(1);
   }, []);
 
-  async function loadData() {
+  async function loadData(targetPage: number = page) {
     setLoading(true);
     setPageError("");
 
@@ -118,12 +121,18 @@ export default function UsersPage() {
     try {
       const [rolesRes, usersRes] = await Promise.all([
         postLegacy<RolesR>("GetRoles", {}, token),
-        postLegacy<UserRolesRR>("GetRolesByAdmin", { idOrganizer, page: 0 }, token),
+        postLegacy<UserRolesRR>(
+          "GetRolesByAdmin",
+          { idOrganizer, page: targetPage - 1 },
+          token
+        ),
       ]);
 
       setRoles(rolesRes.Roles ?? []);
       setUserRoles(usersRes.resp?.usersRoles ?? []);
       setHasUsers(usersRes.resp?.code ?? false);
+      setTotalPages(usersRes.resp?.totalDePaginas ?? 0);
+      setPage(targetPage);
     } catch (err) {
       setPageError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -447,6 +456,7 @@ export default function UsersPage() {
               <p className="py-10 text-center text-sm text-slate-400">Cargando...</p>
             ) : activeTab === "users" ? (
               hasUsers ? (
+                <>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
@@ -507,6 +517,9 @@ export default function UsersPage() {
                     </tbody>
                   </table>
                 </div>
+
+                <Pagination page={page} totalPages={totalPages} onPageChange={loadData} />
+                </>
               ) : (
                 /* Estado vacío */
                 <div className="flex flex-col items-center py-14 text-center">
