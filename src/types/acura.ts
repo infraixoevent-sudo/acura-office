@@ -275,20 +275,22 @@ export interface RGetTicketsReport {
   pageSize: number;
 }
 
+// Lee el wire camelCase de ACURA-ADMIN (Fase 8, lote 1): el backend emite en
+// doble emisión (PascalCase + camelCase) hasta el corte del lote.
 export interface GetTicketsReportR {
-  Code: boolean;
-  Message?: string;
-  Tickets?: TicketsList[];
-  TotalElements: number;
-  TotalPages: number;
+  code: boolean;
+  message?: string;
+  tickets?: TicketsList[];
+  totalElements: number;
+  totalPages: number;
 }
 
 export interface TicketsList {
-  IdOrder: number;
-  Amount: number;
-  Status: string | null;
-  Quantity: number;
-  PDFURL?: string | null;
+  idOrder: number;
+  amount: number;
+  status: string | null;
+  quantity: number;
+  pdfUrl?: string | null;
 }
 
 export interface Status {
