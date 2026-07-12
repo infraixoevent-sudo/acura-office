@@ -137,8 +137,8 @@ export default function Page() {
         getStoredToken()
       );
 
-      setTickets(response.Tickets ?? []);
-      setTotalPages(response.TotalPages ?? 0);
+      setTickets(response.tickets ?? []);
+      setTotalPages(response.totalPages ?? 0);
       setPage(targetPage);
       setSearched(true);
     } catch (err) {
@@ -340,25 +340,25 @@ export default function Page() {
 
               <tbody>
                 {tickets.map((ticket) => (
-                  <tr key={ticket.IdOrder} className="border-b border-[#d9dee3]">
+                  <tr key={ticket.idOrder} className="border-b border-[#d9dee3]">
                     <td className="px-4 py-5 text-center text-sm text-slate-700">
-                      {ticket.IdOrder}
+                      {ticket.idOrder}
                     </td>
                     <td className="px-4 py-5 text-center text-sm text-slate-700">
-                      {formatMoney(ticket.Amount)}
+                      {formatMoney(ticket.amount)}
                     </td>
                     <td className="px-4 py-5 text-center text-sm text-slate-700">
-                      {ticket.Status}
+                      {ticket.status}
                     </td>
                     <td className="px-4 py-5 text-center text-sm text-slate-700">
-                      {ticket.Quantity}
+                      {ticket.quantity}
                     </td>
                     <td className="px-4 py-5 text-center">
-                      {ticket.PDFURL ? (
+                      {ticket.pdfUrl ? (
                         <button
                           type="button"
                           title="Ver Reporte"
-                          onClick={() => openPdf(ticket.PDFURL, ticket.IdOrder)}
+                          onClick={() => openPdf(ticket.pdfUrl, ticket.idOrder)}
                           className="inline-flex cursor-pointer items-center justify-center rounded-lg p-1 hover:bg-slate-100"
                         >
                           <img src="/img/eye.svg" width={20} height={20} alt="Ver Reporte" />
