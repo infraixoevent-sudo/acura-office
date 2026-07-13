@@ -5,22 +5,23 @@ import Link from "next/link";
 import Swal from "sweetalert2";
 import { AppShell } from "@/components/AppShell";
 import { Pagination } from "@/components/Pagination";
-import { getStoredToken, postLegacy } from "@/lib/apiClient";
+import { postLegacy } from "@/lib/apiClient";
+import { useSessionGuard } from "@/lib/useSessionGuard";
 import type {
   UserRoles,
-  Roles,
+  RoleCatalogEntry,
   UserRolesRR,
-  RolesR,
-  GenericRR,
+  RoleCatalogR,
+  RoleActionRR,
   GetUserbyEmailRR,
 } from "@/types/acura";
 
+// Rol "Autorizador" — el Blazor original lo excluye del catálogo asignable
+// (Users.razor: `_roles.Remove(_roles.Where(r => r.IdRole == 4)...)`)
+const AUTORIZADOR_ROLE_ID = 4;
+
 type Tab = "users" | "roles";
 type ModalMode = "add" | "edit";
-
-function getOrganizerId(): number {
-  return parseInt(localStorage.getItem("IdOrganizer") ?? "0", 10);
-}
 
 function formatDate(dateStr: string): string {
   try {
@@ -86,9 +87,11 @@ const inputDisabledClass =
   "w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-500 outline-none cursor-not-allowed";
 
 export default function UsersPage() {
+  const { session, error: sessionError } = useSessionGuard();
+
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [userRoles, setUserRoles] = useState<UserRoles[]>([]);
-  const [roles, setRoles] = useState<Roles[]>([]);
+  const [roles, setRoles] = useState<RoleCatalogEntry[]>([]);
   const [hasUsers, setHasUsers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
@@ -108,27 +111,29 @@ export default function UsersPage() {
   const [emailLookupLoading, setEmailLookupLoading] = useState(false);
 
   useEffect(() => {
-    loadData(1);
-  }, []);
+    if (session) loadData(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
 
   async function loadData(targetPage: number = page) {
+    if (!session) return;
+
     setLoading(true);
     setPageError("");
 
-    const token = getStoredToken();
-    const idOrganizer = getOrganizerId();
-
     try {
       const [rolesRes, usersRes] = await Promise.all([
-        postLegacy<RolesR>("GetRoles", {}, token),
+        postLegacy<RoleCatalogR>("GetRoles", {}, session.token),
         postLegacy<UserRolesRR>(
           "GetRolesByAdmin",
-          { idOrganizer, page: targetPage - 1 },
-          token
+          { idOrganizer: session.idOrganizer, page: targetPage - 1 },
+          session.token
         ),
       ]);
 
-      setRoles(rolesRes.Roles ?? []);
+      // El rol "Autorizador" (idRole 4) no es asignable desde esta pantalla,
+      // paridad con el catálogo del Blazor original.
+      setRoles((rolesRes.roles ?? []).filter((r) => r.idRole !== AUTORIZADOR_ROLE_ID));
       setUserRoles(usersRes.resp?.usersRoles ?? []);
       setHasUsers(usersRes.resp?.code ?? false);
       setTotalPages(usersRes.resp?.totalDePaginas ?? 0);
@@ -153,11 +158,11 @@ export default function UsersPage() {
   }
 
   function openEditModal(user: UserRoles) {
-    const matched = roles.find((r) => r.Description === user.roleDescription);
+    const matched = roles.find((r) => r.description === user.roleDescription);
     setModalMode("edit");
     setFormEmail(user.email ?? "");
     setFormName(user.name ?? "");
-    setFormRoleId(matched?.IdRole ?? "");
+    setFormRoleId(matched?.idRole ?? "");
     setEmailError("");
     setNameError("");
     setRoleError("");
@@ -166,22 +171,21 @@ export default function UsersPage() {
   }
 
   async function handleEmailBlur() {
-    if (modalMode !== "add") return;
+    if (modalMode !== "add" || !session) return;
     if (!formEmail || !isValidEmail(formEmail)) return;
 
     setEmailLookupLoading(true);
     setFormName("");
     setEmailError("");
 
-    const token = getStoredToken();
     try {
       const res = await postLegacy<GetUserbyEmailRR>(
         "GetUserbyEmail",
         { Email: formEmail },
-        token
+        session.token
       );
       if (res.resp?.code) {
-        const name = res.resp.UserName ?? "";
+        const name = res.resp.userName ?? "";
         setFormName(name);
       } else {
         setEmailError("Este correo no ha sido registrado previamente");
@@ -225,17 +229,15 @@ export default function UsersPage() {
   }
 
   async function handleAddUser() {
-    if (!validateForm()) return;
+    if (!validateForm() || !session) return;
 
     setModalLoading(true);
-    const token = getStoredToken();
-    const idOrganizer = getOrganizerId();
 
     try {
       const emailCheck = await postLegacy<GetUserbyEmailRR>(
         "GetUserbyEmail",
         { Email: formEmail },
-        token
+        session.token
       );
 
       if (!emailCheck.resp?.code) {
@@ -243,18 +245,18 @@ export default function UsersPage() {
         return;
       }
 
-      const idUser = emailCheck.resp.IdUser ?? 0;
+      const idUser = emailCheck.resp.idUser ?? 0;
 
-      const result = await postLegacy<GenericRR>(
+      const result = await postLegacy<RoleActionRR>(
         "CreateRole",
         {
-          IdOrganizer: idOrganizer,
-          IdUser: idUser,
-          IdRole: formRoleId,
-          Email: formEmail,
-          Name: formName,
+          idOrganizer: session.idOrganizer,
+          idUser,
+          idRole: formRoleId,
+          email: formEmail,
+          name: formName,
         },
-        token
+        session.token
       );
 
       setModalOpen(false);
@@ -289,23 +291,21 @@ export default function UsersPage() {
   }
 
   async function handleEditUser() {
-    if (!validateForm() || editUserId === null) return;
+    if (!validateForm() || editUserId === null || !session) return;
 
     setModalLoading(true);
-    const token = getStoredToken();
-    const idOrganizer = getOrganizerId();
 
     try {
-      const result = await postLegacy<GenericRR>(
+      const result = await postLegacy<RoleActionRR>(
         "EditRole",
         {
-          IdOrganizer: idOrganizer,
-          IdUser: editUserId,
-          IdRole: formRoleId,
-          Email: formEmail,
-          Name: formName,
+          idOrganizer: session.idOrganizer,
+          idUser: editUserId,
+          idRole: formRoleId,
+          email: formEmail,
+          name: formName,
         },
-        token
+        session.token
       );
 
       setModalOpen(false);
@@ -340,6 +340,8 @@ export default function UsersPage() {
   }
 
   async function handleDeleteUser(user: UserRoles) {
+    if (!session) return;
+
     const confirmed = await Swal.fire({
       title: "",
       html: `¿Estás seguro de eliminar al siguiente <br /> colaborador del proyecto?<br /><strong>${user.name}</strong>`,
@@ -361,14 +363,11 @@ export default function UsersPage() {
 
     if (!confirmed.isConfirmed) return;
 
-    const token = getStoredToken();
-    const idOrganizer = getOrganizerId();
-
     try {
-      const result = await postLegacy<GenericRR>(
+      const result = await postLegacy<RoleActionRR>(
         "DeleteRole",
-        { IdOrganizer: idOrganizer, IdUser: user.idUser },
-        token
+        { idOrganizer: session.idOrganizer, idUser: user.idUser },
+        session.token
       );
 
       if (result.resp?.code) {
@@ -395,6 +394,22 @@ export default function UsersPage() {
         confirmButtonText: "Aceptar",
       });
     }
+  }
+
+  if (sessionError) {
+    return (
+      <AppShell>
+        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{sessionError}</div>
+      </AppShell>
+    );
+  }
+
+  if (!session) {
+    return (
+      <AppShell>
+        <p className="py-10 text-center text-sm text-slate-400">Cargando...</p>
+      </AppShell>
+    );
   }
 
   return (
@@ -493,24 +508,28 @@ export default function UsersPage() {
                             {formatDate(user.roleDate)}
                           </td>
                           <td className="border-b border-slate-100 px-4 py-3">
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => openEditModal(user)}
-                                title="Editar usuario"
-                                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-[#6b35f5]"
-                              >
-                                <EditIcon />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteUser(user)}
-                                title="Eliminar colaborador"
-                                className="rounded-lg p-1.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
-                              >
-                                <TrashIcon />
-                              </button>
-                            </div>
+                            {/* El dueño de la organización no puede auto-editarse/eliminarse
+                                (paridad con TableUser.razor: `@if (!IsOwner)`) */}
+                            {!user.isOwner && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => openEditModal(user)}
+                                  title="Editar usuario"
+                                  className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-[#6b35f5]"
+                                >
+                                  <EditIcon />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteUser(user)}
+                                  title="Eliminar colaborador"
+                                  className="rounded-lg p-1.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -578,9 +597,9 @@ export default function UsersPage() {
                     </thead>
                     <tbody>
                       {roles.map((role) => (
-                        <tr key={role.IdRole}>
+                        <tr key={role.idRole}>
                           <td className="border-b border-slate-100 px-4 py-3 text-sm text-slate-700">
-                            {role.Description}
+                            {role.description}
                           </td>
                         </tr>
                       ))}
@@ -696,8 +715,8 @@ export default function UsersPage() {
                 >
                   <option value="">Selecciona una opción</option>
                   {roles.map((role) => (
-                    <option key={role.IdRole} value={role.IdRole}>
-                      {role.Description}
+                    <option key={role.idRole} value={role.idRole}>
+                      {role.description}
                     </option>
                   ))}
                 </select>

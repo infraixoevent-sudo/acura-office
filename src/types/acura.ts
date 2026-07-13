@@ -325,14 +325,13 @@ export interface QRTicket {
   description: string;
 }
 
-export interface GenericRR {
-  resp: GenericR;
+// Wire final camelCase (Protocolo R1-R7) de CreateRole/EditRole/DeleteRole —
+// ResponseGeneric del C# solo serializa code/message.
+export interface RoleActionRR {
+  resp: RoleActionR;
 }
 
-export interface GenericR {
-  Code: boolean;
-  Message: string;
-  IdEvent: string;
+export interface RoleActionR {
   code: boolean;
   message: string;
 }
@@ -489,6 +488,7 @@ export interface ticketFolio {
   IdEvent: number;
 }
 
+// Wire final camelCase (Protocolo R1-R7): UserbyMailR del C# serializa userName/idUser.
 export interface GetUserbyEmailRR {
   resp: GetUserbyEmailR;
 }
@@ -496,8 +496,8 @@ export interface GetUserbyEmailRR {
 export interface GetUserbyEmailR {
   code: boolean;
   message: string;
-  UserName?: string;
-  IdUser?: number;
+  userName?: string;
+  idUser?: number;
 }
 
 export interface LogInR {
@@ -525,15 +525,17 @@ export interface RecoverPasswowordR {
   Token: string;
 }
 
-export interface RolesR {
-  Roles: Roles[];
+// Wire final camelCase (Protocolo R1-R7): catálogo de roles, RolesR del C#
+// hereda de ResponseGeneric (code/message ya minúsculas en el código fuente).
+export interface RoleCatalogR {
+  roles: RoleCatalogEntry[];
   code: boolean;
   message: string;
 }
 
-export interface Roles {
-  IdRole: number;
-  Description: string;
+export interface RoleCatalogEntry {
+  idRole: number;
+  description: string | null;
 }
 
 export interface TicketR {
@@ -618,6 +620,7 @@ export interface UserRoles {
   name: string;
   roleDescription: string;
   roleDate: string;
+  isOwner: boolean;
 }
 
 export interface SelectedTickets {
