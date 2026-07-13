@@ -635,24 +635,45 @@ export interface SelectedTicket {
   Quantity: number;
 }
 
+// Wire final camelCase (Protocolo R1-R7): AvailableViewInfo del C# solo
+// serializa idView/name/main — nunca IsMenu/IsMain/URL.
 export interface RoleView {
-  IdView: number;
-  Description?: string;
-  URL: string;
-  IsMenu?: number;
-  IsMain?: number;
-  Main?: number;
-  IsApp: number;
+  idView: number;
+  name: string | null;
+  main: number | null;
 }
 
 export interface GetAvailableRoleViewsR {
   code: boolean;
   message: string;
-  Views: RoleView[];
+  views: RoleView[];
 }
 
-export interface RCreateOrganizerRole {
-  Description: string;
-  IdOrganizer: number;
-  Views: number[];
+// Wire final camelCase: GetOrganizerRolesR del C# (roles del organizador + catálogo default)
+export interface GetOrganizerRolesR {
+  code: boolean;
+  message: string;
+  roles: OrganizerRoleInfo[];
+}
+
+export interface OrganizerRoleInfo {
+  idRole: number;
+  name: string | null;
+  isDefault: boolean;
+}
+
+// Wire final camelCase: GetOrganizerRoleDetailsR del C#, plano (views = IdView ya asignados)
+export interface GetOrganizerRoleDetailsR {
+  code: boolean;
+  message: string;
+  idRole: number | null;
+  name: string | null;
+  views: number[] | null;
+}
+
+// Wire final camelCase compartido por CreateOrganizerRole/UpdateOrganizerRole/DeleteOrganizerRole
+// (ResponseGeneric del C# solo serializa code/message, sin envoltura resp)
+export interface OrganizerRoleActionR {
+  code: boolean;
+  message: string;
 }
