@@ -1,49 +1,77 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Swal from "sweetalert2";
 import { AppShell } from "@/components/AppShell";
 import { RoleViewsChecklist } from "@/components/RoleViewsChecklist";
 import { postLegacy } from "@/lib/apiClient";
 import { getMissingRoleFields, isValidRoleName, toggleRoleView } from "@/lib/roleViews";
 import { useSessionGuard } from "@/lib/useSessionGuard";
-import type { GetAvailableRoleViewsR, OrganizerRoleActionR, RoleView } from "@/types/acura";
+import type {
+  GetAvailableRoleViewsR,
+  GetOrganizerRoleDetailsR,
+  OrganizerRoleActionR,
+  RoleView,
+} from "@/types/acura";
 
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#6b35f5] focus:ring-2 focus:ring-[#6b35f5]/10";
 
-export default function RolePage() {
+function EditRoleForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const idRole = Number(searchParams.get("idRole") ?? "0");
   const { session, error: sessionError } = useSessionGuard();
 
   const [views, setViews] = useState<RoleView[]>([]);
-  const [loadingViews, setLoadingViews] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
   const [roleName, setRoleName] = useState("");
   const [selectedViews, setSelectedViews] = useState<number[]>([]);
   const [nameError, setNameError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (session) loadViews();
+    if (session) loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  async function loadViews() {
+  async function loadData() {
     if (!session) return;
 
-    setLoadingViews(true);
+    if (!idRole || idRole <= 0) {
+      setPageError("No se encontró el rol a editar.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setPageError("");
+
     try {
-      const res = await postLegacy<GetAvailableRoleViewsR>(
-        "GetAvailableRoleViews",
-        {},
-        session.token
-      );
-      setViews(res.views ?? []);
-    } catch {
-      setViews([]);
+      const [viewsRes, detailsRes] = await Promise.all([
+        postLegacy<GetAvailableRoleViewsR>("GetAvailableRoleViews", {}, session.token),
+        postLegacy<GetOrganizerRoleDetailsR>(
+          "GetOrganizerRoleDetails",
+          { idRole },
+          session.token
+        ),
+      ]);
+
+      setViews(viewsRes.views ?? []);
+
+      if (!detailsRes.code) {
+        setPageError(detailsRes.message ?? "El rol no existe.");
+        return;
+      }
+
+      setRoleName(detailsRes.name ?? "");
+      setSelectedViews(detailsRes.views ?? []);
+    } catch (err) {
+      setPageError(err instanceof Error ? err.message : String(err));
     } finally {
-      setLoadingViews(false);
+      setLoading(false);
     }
   }
 
@@ -84,27 +112,27 @@ export default function RolePage() {
 
     try {
       const res = await postLegacy<OrganizerRoleActionR>(
-        "CreateOrganizerRole",
+        "UpdateOrganizerRole",
         {
-          RoleName: roleName.trim(),
-          IdOrganizer: session.idOrganizer,
-          RoleViews: selectedViews,
+          idRole,
+          name: roleName.trim(),
+          views: selectedViews,
         },
         session.token
       );
 
       if (res.code) {
         await Swal.fire({
-          title: "Exitoso",
-          text: res.message ?? "Rol creado correctamente",
+          title: "",
+          text: "se ha editado el rol correctamente",
           icon: "success",
           confirmButtonText: "Aceptar",
         });
         router.push("/Users");
       } else {
         await Swal.fire({
-          title: "Error",
-          text: res.message ?? "Error al crear el rol",
+          title: "",
+          text: res.message ?? "Error al editar el rol",
           icon: "error",
           confirmButtonText: "Aceptar",
         });
@@ -137,13 +165,30 @@ export default function RolePage() {
     );
   }
 
+  if (pageError) {
+    return (
+      <AppShell>
+        <div className="flex flex-col gap-4 max-w-2xl">
+          <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{pageError}</div>
+          <button
+            type="button"
+            onClick={() => router.push("/Users")}
+            className="w-fit rounded-xl border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Volver a Usuarios
+          </button>
+        </div>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div className="flex flex-col gap-6 max-w-2xl">
 
         {/* Encabezado */}
         <div className="flex items-start justify-between gap-4">
-          <h2 className="text-2xl font-bold text-[#27243a]">Agregar Rol de usuario</h2>
+          <h2 className="text-2xl font-bold text-[#27243a]">Editar Rol de usuario</h2>
           <button
             type="button"
             onClick={() => router.push("/Users")}
@@ -199,23 +244,31 @@ export default function RolePage() {
             </p>
             <RoleViewsChecklist
               views={views}
-              loading={loadingViews}
+              loading={loading}
               selected={selectedViews}
               onToggle={toggleView}
             />
           </div>
         </div>
 
-        {/* Botón Agregar Rol */}
+        {/* Botón Editar Rol */}
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={saving || loadingViews}
+          disabled={saving || loading}
           className="w-full rounded-xl bg-[#6b35f5] py-3 text-sm font-bold text-white transition hover:bg-[#5b2ce6] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {saving ? "Guardando..." : "Agregar Rol"}
+          {saving ? "Guardando..." : "Editar Rol"}
         </button>
       </div>
     </AppShell>
+  );
+}
+
+export default function EditRolePage() {
+  return (
+    <Suspense fallback={null}>
+      <EditRoleForm />
+    </Suspense>
   );
 }

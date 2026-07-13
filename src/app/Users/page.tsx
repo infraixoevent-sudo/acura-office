@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { AppShell } from "@/components/AppShell";
 import { Pagination } from "@/components/Pagination";
@@ -14,6 +15,9 @@ import type {
   RoleCatalogR,
   RoleActionRR,
   GetUserbyEmailRR,
+  GetOrganizerRolesR,
+  OrganizerRoleInfo,
+  OrganizerRoleActionR,
 } from "@/types/acura";
 
 // Rol "Autorizador" — el Blazor original lo excluye del catálogo asignable
@@ -87,11 +91,13 @@ const inputDisabledClass =
   "w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm text-slate-500 outline-none cursor-not-allowed";
 
 export default function UsersPage() {
+  const router = useRouter();
   const { session, error: sessionError } = useSessionGuard();
 
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [userRoles, setUserRoles] = useState<UserRoles[]>([]);
   const [roles, setRoles] = useState<RoleCatalogEntry[]>([]);
+  const [organizerRoles, setOrganizerRoles] = useState<OrganizerRoleInfo[]>([]);
   const [hasUsers, setHasUsers] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
@@ -122,11 +128,16 @@ export default function UsersPage() {
     setPageError("");
 
     try {
-      const [rolesRes, usersRes] = await Promise.all([
+      const [rolesRes, usersRes, organizerRolesRes] = await Promise.all([
         postLegacy<RoleCatalogR>("GetRoles", {}, session.token),
         postLegacy<UserRolesRR>(
           "GetRolesByAdmin",
           { idOrganizer: session.idOrganizer, page: targetPage - 1 },
+          session.token
+        ),
+        postLegacy<GetOrganizerRolesR>(
+          "GetRolesByOrganizer",
+          { idOrganizer: session.idOrganizer },
           session.token
         ),
       ]);
@@ -137,6 +148,7 @@ export default function UsersPage() {
       setUserRoles(usersRes.resp?.usersRoles ?? []);
       setHasUsers(usersRes.resp?.code ?? false);
       setTotalPages(usersRes.resp?.totalDePaginas ?? 0);
+      setOrganizerRoles(organizerRolesRes.roles ?? []);
       setPage(targetPage);
     } catch (err) {
       setPageError(err instanceof Error ? err.message : String(err));
@@ -396,6 +408,67 @@ export default function UsersPage() {
     }
   }
 
+  function openEditRole(idRole: number) {
+    router.push(`/EditRole?idRole=${idRole}`);
+  }
+
+  async function handleDeleteOrganizerRole(role: OrganizerRoleInfo) {
+    if (!session) return;
+
+    const confirmed = await Swal.fire({
+      title: "",
+      html: `¿Estás seguro de eliminar el rol ${role.name}? <br /> Todos los colaboradores asociados a este rol perderán los permisos otorgados.`,
+      imageUrl: "/img/trash user.png",
+      imageWidth: 150,
+      imageAlt: "Eliminar rol",
+      showCancelButton: true,
+      cancelButtonText: "Cancelar",
+      confirmButtonText: "Confirmar",
+      customClass: {
+        confirmButton: "swalCancelButtonPayment",
+        cancelButton: "swalCloseButtonPayment",
+        actions: "swalActionsDeny",
+        htmlContainer: "titleCancelUserswal",
+        image: "imageUser",
+      },
+      buttonsStyling: true,
+    });
+
+    if (!confirmed.isConfirmed) return;
+
+    try {
+      const result = await postLegacy<OrganizerRoleActionR>(
+        "DeleteOrganizerRole",
+        { idRole: role.idRole },
+        session.token
+      );
+
+      if (result.code) {
+        await Swal.fire({
+          title: "Exitoso",
+          text: result.message ?? "Rol eliminado exitosamente",
+          icon: "success",
+          confirmButtonText: "Aceptar",
+        });
+        await loadData();
+      } else {
+        await Swal.fire({
+          title: "Error",
+          text: result.message ?? "Error al eliminar el rol",
+          icon: "error",
+          confirmButtonText: "Aceptar",
+        });
+      }
+    } catch (err) {
+      await Swal.fire({
+        title: "Error",
+        text: err instanceof Error ? err.message : String(err),
+        icon: "error",
+        confirmButtonText: "Aceptar",
+      });
+    }
+  }
+
   if (sessionError) {
     return (
       <AppShell>
@@ -572,11 +645,11 @@ export default function UsersPage() {
                 </div>
               )
             ) : (
-              /* Pestaña de roles — solo lectura */
+              /* Pestaña de roles — roles del organizador + catálogo default (GetRolesByOrganizer) */
               <div>
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm text-slate-500">
-                    {roles.length} rol{roles.length !== 1 ? "es" : ""} disponible{roles.length !== 1 ? "s" : ""}
+                    {organizerRoles.length} rol{organizerRoles.length !== 1 ? "es" : ""} disponible{organizerRoles.length !== 1 ? "s" : ""}
                   </span>
                   <Link
                     href="/Role"
@@ -593,13 +666,40 @@ export default function UsersPage() {
                         <th className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700">
                           Rol
                         </th>
+                        <th className="border-b border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700">
+                          Acciones
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {roles.map((role) => (
+                      {organizerRoles.map((role) => (
                         <tr key={role.idRole}>
                           <td className="border-b border-slate-100 px-4 py-3 text-sm text-slate-700">
-                            {role.description}
+                            {role.name}
+                          </td>
+                          <td className="border-b border-slate-100 px-4 py-3">
+                            {/* Los roles del catálogo default (sistema) no son editables/eliminables
+                                por el organizador — paridad con TableRoles.razor: `@if (!Visible)` */}
+                            {!role.isDefault && (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => openEditRole(role.idRole)}
+                                  title="Editar rol"
+                                  className="rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-[#6b35f5]"
+                                >
+                                  <EditIcon />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteOrganizerRole(role)}
+                                  title="Eliminar rol"
+                                  className="rounded-lg p-1.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600"
+                                >
+                                  <TrashIcon />
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))}
