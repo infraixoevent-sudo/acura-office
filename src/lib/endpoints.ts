@@ -46,7 +46,13 @@ export const legacyEndpoints = {
   "UpdateUserStatus": "user",
   "ValidateCodeRecovery": "user",
   "sendRecoverPasswordEmail": "user",
-  "RegenerateOrden": "user"
+  "RegenerateOrden": "user",
+  "GetOrganizers": "admin",
+  "GetEventsByOrganizer": "admin",
+  "GetSaldoByEvent": "admin",
+  "GetTransferByEvent": "admin",
+  "GetTransferDetails": "admin",
+  "RegisterTransferToOrganizer": "admin"
 } as const;
 
 export type LegacyEndpoint = keyof typeof legacyEndpoints;
