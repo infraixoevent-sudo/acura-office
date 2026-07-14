@@ -879,3 +879,77 @@ export interface RegisterTransferR {
   code: boolean;
   message: string;
 }
+
+// Wire final camelCase (Protocolo R1-R7) — /Admin/Applications (EVENTS).
+// GetOrganizer/GetOrganizerByIdOrganizer/UpdateStatusOrganizerApplication
+// responden {code, msj} en vez de {code, message} — espejo literal de
+// Program.cs:311/319 del C#, distinto al resto de endpoints de EVENTS.
+
+export interface RGetOrganizerApplications {
+  page: number;
+  searchOrganizerName?: string;
+  idStatusOrganizer?: number;
+}
+
+export interface OrganizerApplicationItem {
+  idOrganizer: number;
+  contactname: string;
+  contactEmail: string;
+  contactPhoneNumber: string;
+  createdAt: string;
+  statusApp: string;
+}
+
+export interface GetOrganizerApplicationsR {
+  code: boolean;
+  message: string;
+  totalDePaginas: number;
+  totalDeRegistros: number;
+  dtoOrganizerLst: OrganizerApplicationItem[] | null;
+  dtoOrganizerInfo: null;
+}
+
+export interface RGetOrganizerApplicationDetail {
+  idOrganizer: number;
+}
+
+export interface OrganizerApplicationDetail {
+  idOrganizer: number;
+  urlImg: string | null;
+  name: string | null;
+  organizerDescription: string | null;
+  website: string | null;
+  companyName: string | null;
+  contactname: string | null;
+  contactPhoneNumber: string | null;
+  contactEmail: string | null;
+  rfc: string | null;
+  curp: string | null;
+  officialRepresentativeID: string | null;
+  proofTaxSituation: string | null;
+  accountStatement: string | null;
+  proofResidency: string | null;
+  clabe: string | null;
+  bankName: string | null;
+  urlFacebook: string | null;
+  urlX: string | null;
+  urlInstagram: string | null;
+}
+
+export interface GetOrganizerApplicationDetailR {
+  code: boolean;
+  msj: string;
+  organizerInfo?: OrganizerApplicationDetail;
+}
+
+export interface RUpdateStatusOrganizerApplication {
+  idOrganizer: number;
+  idStatusApplication: number;
+  message?: string;
+  approvedAt?: string;
+}
+
+export interface UpdateStatusOrganizerApplicationR {
+  code: boolean;
+  msj: string;
+}
