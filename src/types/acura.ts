@@ -241,14 +241,66 @@ export interface StatesCashier {
   StateName?: string;
 }
 
+// Wire final camelCase (ACURA-EVENTS, GetEventCategory) — espejo de
+// Program.cs: Results.Ok(new { code=true, cat.eventCategoriesList }), sin
+// "message". Sustituye el shape PascalCase anterior (sin consumidor real).
 export interface EventCategoryR {
-  eventCategoriesList: EventCategoryDetails[];
+  code: boolean;
+  eventCategoriesList: EventCategoryItem[];
 }
 
-export interface EventCategoryDetails {
-  Id: number;
-  Description: string;
-  UrlImage: string;
+export interface EventCategoryItem {
+  id: number;
+  description: string;
+  urlImage: string;
+}
+
+// Wire final camelCase (ACURA-EVENTS, GetEventStatus) — espejo de
+// Program.cs: Results.Ok(new { code=true, cat.eventStatuses }), sin
+// "message" ni envoltorio "data".
+export interface GetEventStatusR {
+  code: boolean;
+  eventStatuses: EventStatusItem[];
+}
+
+export interface EventStatusItem {
+  idEventStatus: number;
+  description: string;
+}
+
+export interface RGetOrganizersEventsFiltered {
+  organizerName?: string;
+  eventName?: string;
+  idEventStatus?: number;
+  idEventCategory?: number;
+  startDate?: string;
+  endDate?: string;
+  page: number;
+}
+
+export interface GetOrganizersEventsFilteredR {
+  code: boolean;
+  message?: string;
+  events?: OrganizerEventItem[];
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface OrganizerEventItem {
+  idOrganizer: number;
+  organizerName: string;
+  idEvent: number;
+  eventName: string;
+  idEventCategory: number;
+  category: string | null;
+  eventDate: string;
+  idEventStatus: number;
+  status: string | null;
+  totalTransferred: number;
+  totalPendingToTransfer: number;
+  totalEarnings: number;
+  soldTickets: number;
+  availableTickets: number;
 }
 
 export interface EventsR {

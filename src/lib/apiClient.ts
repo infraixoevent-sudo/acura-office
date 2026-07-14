@@ -49,6 +49,26 @@ export async function postLegacy<TResponse = unknown, TRequest = unknown>(
   return data as TResponse;
 }
 
+export async function getLegacy<TResponse = unknown>(
+  endpoint: LegacyEndpoint,
+  token?: string | null
+): Promise<TResponse> {
+  const response = await fetch(`${getBaseUrl(endpoint)}/api/${endpoint}`, {
+    method: "GET",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error((data as any)?.message || "Request failed");
+  }
+
+  return data as TResponse;
+}
+
 export function getStoredToken() {
   if (typeof window === "undefined") return null;
 
