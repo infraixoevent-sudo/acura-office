@@ -9,7 +9,6 @@ export default function LoginPage() {
 
   const [Email, setEmail] = useState("");
   const [Pass, setPass] = useState("");
-  const [IsAdmin, setIsAdmin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +35,11 @@ export default function LoginPage() {
         body: JSON.stringify({
           Email,
           Pass,
-          IsAdmin,
+          // El office es exclusivamente el panel de organizadores: IsAdmin
+          // siempre va true (espejo del Blazor original, Index.razor —
+          // ahí estaba hardcodeado, nunca fue un checkbox de usuario).
+          // Sin esto, LogIn nunca puebla idOrganizer en la respuesta.
+          IsAdmin: true,
         }),
       });
 
@@ -214,17 +217,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-3 text-sm font-medium text-black">
-                  <input
-                    type="checkbox"
-                    checked={IsAdmin}
-                    onChange={(event) => setIsAdmin(event.target.checked)}
-                    className="h-6 w-6 rounded border-[#b8beca] accent-[#5b2ce6]"
-                  />
-                  Recordarme
-                </label>
-
+              <div className="flex items-center justify-end pt-1">
                 <a
                   href="/RecoverPassword"
                   className="text-sm font-medium text-black transition hover:text-[#5b2ce6] hover:underline"
