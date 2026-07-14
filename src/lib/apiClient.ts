@@ -43,7 +43,9 @@ export async function postLegacy<TResponse = unknown, TRequest = unknown>(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error((data as any)?.message || "Request failed");
+    // `msj` es la clave real de error en los endpoints re-migrados que aún no
+    // usan `message` (p.ej. UpdateStatusOrganizerApplication, Program.cs:319 C#).
+    throw new Error((data as any)?.message || (data as any)?.msj || "Request failed");
   }
 
   return data as TResponse;
@@ -63,7 +65,9 @@ export async function getLegacy<TResponse = unknown>(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error((data as any)?.message || "Request failed");
+    // `msj` es la clave real de error en los endpoints re-migrados que aún no
+    // usan `message` (p.ej. UpdateStatusOrganizerApplication, Program.cs:319 C#).
+    throw new Error((data as any)?.message || (data as any)?.msj || "Request failed");
   }
 
   return data as TResponse;
