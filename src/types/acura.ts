@@ -105,12 +105,15 @@ export interface REventPublication {
   IdEvent?: string;
 }
 
+// Re-migrado (Protocolo R1-R7): wire final camelCase de ACURA-EVENTS
+// (GetAdminEvents), espejo de DtoAdminEvents/ResponseGeneric del C#.
 export interface REvents {
-  IdOrganizer: number;
-  IdStatus: string;
-  Name?: string;
-  Date?: string;
-  IdState?: number;
+  idOrganizer: number;
+  idStatus?: string;
+  name?: string;
+  date?: string;
+  idState?: number;
+  page?: number;
 }
 
 export interface RFullPayment {
@@ -249,19 +252,19 @@ export interface EventCategoryDetails {
 }
 
 export interface EventsR {
-  Code: boolean;
-  Message?: string;
+  code: boolean;
+  message?: string;
   adminEvents?: EventsOrganizerList[];
 }
 
 export interface EventsOrganizerList {
-  Name?: string;
-  Address?: string;
-  SoldTickets: number;
-  AvailableTickets: number;
-  DateAndTime?: string;
-  IdStatus: number;
-  IdEvent: number;
+  name?: string;
+  address?: string;
+  soldTickets: number;
+  availableTickets: number;
+  dateAndTime?: string;
+  idStatus: number;
+  idEvent: number;
 }
 
 export interface RGetTicketsReport {
@@ -275,8 +278,9 @@ export interface RGetTicketsReport {
   pageSize: number;
 }
 
-// Lee el wire camelCase de ACURA-ADMIN (Fase 8, lote 1): el backend emite en
-// doble emisión (PascalCase + camelCase) hasta el corte del lote.
+// Re-migrado (Protocolo R1-R7): wire final camelCase de ACURA-ADMIN
+// (GetTicketsReport), sin doble emisión. "pdfurl" (todo minúsculas) es el
+// nombre real que produce JsonNamingPolicy.CamelCase de STJ sobre PDFURL.
 export interface GetTicketsReportR {
   code: boolean;
   message?: string;
@@ -290,7 +294,7 @@ export interface TicketsList {
   amount: number;
   status: string | null;
   quantity: number;
-  pdfUrl?: string | null;
+  pdfurl?: string | null;
 }
 
 export interface Status {
