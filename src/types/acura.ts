@@ -46,10 +46,11 @@ export interface RCreateEvent {
   Name?: string;
   IdEventCategory: number;
   Description?: string;
-  keyWords?: string;
+  KeyWords?: string;
   NamePlace?: string;
   Street?: string;
   NumExt?: string;
+  NumInt?: string;
   IdState: number;
   StateDescription?: string;
   IdNeighborhood: number;
@@ -59,9 +60,22 @@ export interface RCreateEvent {
   EventDate?: string;
   EventDateEnd?: string;
   Address?: string;
-  EventImage: string | number[];
   IdStatus: number;
   EventOwner?: string;
+  // Base64 opcionales — la subida real a ACURA-MULTIMEDIA queda estacionada
+  // (ver ACURA-EVENTS PR #24, docs/backend-standards.md): el backend acepta
+  // estos campos pero los ignora, no se persisten en EventsImages.
+  EventImage?: string;
+  EventMobileImage?: string;
+}
+
+// Re-migrado (Protocolo R1-R7, ACURA-EVENTS PR #24): wire final camelCase,
+// espejo de Program.cs (Results.Ok(new { response.code, response.message,
+// response.IdEvent }), siempre 200).
+export interface CreateEventR {
+  code: boolean;
+  message: string;
+  idEvent: number;
 }
 
 export interface RCreateRole {
@@ -72,17 +86,26 @@ export interface RCreateRole {
   IdOrganizer: number;
 }
 
+// Espejo del contrato real (ACURA-USERS PR #30, CreateTicketByEvent +
+// Query.createTicket): un boleto por llamada, IdStatusTicket lo manda siempre
+// el Blazor hardcodeado en 1 (puebla TicketClass.IdStatus, no confundir con
+// el IdTicketStatus que calcula el servidor por fecha para la tabla Ticket).
 export interface RCreateTicket {
-  NameTicket?: string;
+  NameTicket: string;
   IdStatusTicket: number;
-  DescriptionTicket?: string;
-  IdEvent: string;
-  Quantity: string;
-  Price: string;
-  IsExtra?: boolean;
-  ColorTicket?: string;
-  SaleStartDate?: string;
-  SaleEndDate?: string;
+  DescriptionTicket: string;
+  IdEvent: number;
+  Quantity: number;
+  Price: number;
+  IsExtra: boolean;
+  ColorTicket: string;
+  SaleStartDate: string;
+  SaleEndDate: string;
+}
+
+export interface CreateTicketR {
+  code: boolean;
+  message: string;
 }
 
 export interface RDeleteTickets {
@@ -568,22 +591,25 @@ export interface Detail {
   totalQuantity: number;
 }
 
+// Re-migrado (Protocolo R1-R7, ACURA-EVENTS PR #24): wire final camelCase.
 export interface GetNeighborhoodsByZipCodeR {
-  TotalRecords: number;
+  code: boolean;
+  message: string;
+  totalDeRegistros: number;
   dataZipCode: DataZipCode;
 }
 
 export interface DataZipCode {
-  IdState: number;
+  idState: number;
   state: string;
-  IdMunicipality: number;
-  Municipality: string;
-  NeighborhoodList: NeighborhoodDetails[];
+  idMunicipality: number;
+  municipality: string;
+  neighborhoodList: NeighborhoodDetails[];
 }
 
 export interface NeighborhoodDetails {
-  IdNeighborhood: number;
-  Description: string;
+  idNeighborhood: number;
+  description: string;
 }
 
 // Re-migrado (Protocolo R1-R7, ACURA-EVENTS PR #23): wire final camelCase.
@@ -658,25 +684,39 @@ export interface RoleCatalogEntry {
   description: string | null;
 }
 
-export interface TicketR {
-  Code: boolean;
-  Message: string;
-  TotalDeRegistros: number;
-  ticketOrganizerList?: TicketOrganizerList[];
+export interface RGetTicketByOrganizer {
+  idEvent: number;
+  page: number;
 }
 
-export interface TicketOrganizerList {
-  idTicketClass?: string;
-  name?: string;
-  price?: string;
-  quantity?: string;
-  description?: string;
-  isExtra?: number;
-  ticketColor?: string;
-  statusMsg?: string;
-  idStatus?: string;
-  saleStartDate?: string;
-  saleEndDate?: string;
+// Re-migrado (Protocolo R1-R7, ACURA-EVENTS PR #24): wire final camelCase,
+// espejo de Program.cs (Results.Ok(new { resp.code, resp.message,
+// resp.TotalDeRegistros, resp.TicketOrganizerList })) — rangePrice y
+// totalDePaginas existen en el DTO C# pero el endpoint real nunca los
+// proyecta en la respuesta.
+export interface GetTicketByOrganizerR {
+  code: boolean;
+  message: string;
+  totalDeRegistros: number;
+  ticketOrganizerList: TicketOrganizerItem[];
+}
+
+export interface TicketOrganizerItem {
+  idTicketClass: number;
+  name: string;
+  descriptionTicket: string;
+  price: string;
+  quantity: number;
+  available: number;
+  ticketStatusDescription: string;
+  isExtra: number;
+  dateResult: string;
+  saleStartDate: string | null;
+  saleEndDate: string | null;
+  idTicketStatus: number;
+  idStatus: number;
+  ticketColor: string;
+  statusMsg: string;
 }
 
 export interface Ticketing {
