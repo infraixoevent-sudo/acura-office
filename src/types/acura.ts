@@ -307,6 +307,34 @@ export interface States {
   StateName?: string;
 }
 
+export interface RGetOrganizersInfoFiltered {
+  organizerName?: string;
+  email?: string;
+  idState?: number;
+  idOrganizerStatus?: number;
+  page: number;
+}
+
+export interface GetOrganizersInfoFilteredR {
+  code: boolean;
+  message?: string;
+  organizers?: OrganizerGeneralInfo[] | null;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface OrganizerGeneralInfo {
+  idOrganizer: number;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  state: string | null;
+  approvedAt?: string | null;
+  idStatus: number;
+  eventsCreated: number;
+  activeEvents: number;
+}
+
 export interface FullPaymentR {
   code: boolean;
   message: string;
