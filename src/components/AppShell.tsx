@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { dedupeByDescription, subtreeContainsPath, useStoredUserMenu } from "@/lib/userMenu";
+import type { UserMenu } from "@/types/acura";
 
 function MenuIcon() {
   return (
@@ -69,24 +71,96 @@ function LogoutIcon() {
   );
 }
 
+// La vista "/ReportsByEvent" se renderiza como su propio sub-grupo colapsable
+// con una única entrada de texto fijo "Órdenes" — espejo exacto de
+// MainLayout.razor (el resto de las vistas hijas se listan planas, sin este
+// segundo nivel).
+function ReportsSubGroup({ view, pathname }: { view: UserMenu; pathname: string | null }) {
+  const [open, setOpen] = useState(() => subtreeContainsPath(view, pathname));
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full cursor-pointer items-center justify-between text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
+      >
+        <span>{view.description}</span>
+
+        <span className="text-[#6b35f5]">
+          <Chevron open={open} />
+        </span>
+      </button>
+
+      {open ? (
+        <div className="mt-5 space-y-5 pl-0">
+          <Link
+            href={view.url}
+            className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
+          >
+            Órdenes
+          </Link>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// Grupo de nivel superior con hijos — espejo de "menusUnicos" en
+// MainLayout.razor: los hijos también se dedupean por Description
+// (DistinctBy(c => c.Description) en el original).
+function NavGroup({ item, pathname }: { item: UserMenu; pathname: string | null }) {
+  const [open, setOpen] = useState(() => subtreeContainsPath(item, pathname));
+  const children = dedupeByDescription(item.childMenu ?? []);
+
+  return (
+    <div className="mb-5">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full cursor-pointer items-center justify-between px-1 text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
+      >
+        <span className="flex items-center gap-3">
+          <span className="text-[#6b35f5]">
+            <MenuIcon />
+          </span>
+          {item.description}
+        </span>
+
+        <span className="text-[#6b35f5]">
+          <Chevron open={open} />
+        </span>
+      </button>
+
+      {open ? (
+        <div className="mt-5 space-y-5 pl-[35px]">
+          {children.map((subItem) =>
+            subItem.url === "/ReportsByEvent" ? (
+              <ReportsSubGroup key={subItem.idView} view={subItem} pathname={pathname} />
+            ) : (
+              <Link
+                key={subItem.idView}
+                href={subItem.url}
+                className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
+              >
+                {subItem.description}
+              </Link>
+            )
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const userMenu = useStoredUserMenu();
+  const menuItems = dedupeByDescription(userMenu);
 
-  const [eventsOpen, setEventsOpen] = useState(
-    pathname === "/Events" ||
-    pathname === "/CreateEvent" ||
-    pathname === "/ReportsByEvent" ||
-    pathname === "/Cashier/CashierEvent"
-  );
-
-  const [reportsOpen, setReportsOpen] = useState(
-    pathname === "/ReportsByEvent" || pathname === "/Cashier/CashierEvent"
-  );
-
-  const [teamOpen, setTeamOpen] = useState(
-    pathname === "/Users" || pathname === "/Role"
-  );
+  const name = typeof window !== "undefined" ? localStorage.getItem("Name") : null;
+  const nameRol = typeof window !== "undefined" ? localStorage.getItem("NameRol") : null;
 
   function logout() {
     localStorage.clear();
@@ -115,130 +189,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="min-w-0">
             <p className="truncate text-[15px] font-extrabold leading-5 text-black">
-              Nazul Garrido
+              {name ?? "Organizador"}
             </p>
             <p className="text-[14px] leading-4 text-[#003a8c]">
-              Organizador de
-              <br />
-              Eventos
+              {nameRol ?? "Organizador de Eventos"}
             </p>
           </div>
         </div>
 
         <nav className="flex-1 px-4">
-          <Link
-            href="/DashBoard"
-            className="mb-5 flex items-center gap-3 px-1 text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
-          >
-            <span className="text-[#6b35f5]">
-              <MenuIcon />
-            </span>
-            Dashboard
-          </Link>
-
-          <div className="mb-5">
-            <button
-              type="button"
-              onClick={() => setEventsOpen((value) => !value)}
-              className="flex w-full cursor-pointer items-center justify-between px-1 text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
-            >
-              <span className="flex items-center gap-3">
+          {menuItems.map((item) =>
+            (item.childMenu?.length ?? 0) > 0 ? (
+              <NavGroup key={item.idView} item={item} pathname={pathname} />
+            ) : (
+              <Link
+                key={item.idView}
+                href={item.url}
+                className="mb-5 flex items-center gap-3 px-1 text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
+              >
                 <span className="text-[#6b35f5]">
                   <MenuIcon />
                 </span>
-                Eventos
-              </span>
-
-              <span className="text-[#6b35f5]">
-                <Chevron open={eventsOpen} />
-              </span>
-            </button>
-
-            {eventsOpen ? (
-              <div className="mt-5 space-y-5 pl-[35px]">
-                <Link
-                  href="/CreateEvent"
-                  className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
-                >
-                  Crear Evento
-                </Link>
-
-                <Link
-                  href="/Events"
-                  className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
-                >
-                  Mis Eventos
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => setReportsOpen((value) => !value)}
-                  className="flex w-full cursor-pointer items-center justify-between text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
-                >
-                  <span>Reportes</span>
-
-                  <span className="text-[#6b35f5]">
-                    <Chevron open={reportsOpen} />
-                  </span>
-                </button>
-
-                {reportsOpen ? (
-                  <div className="space-y-5 pl-0">
-                    <Link
-                      href="/ReportsByEvent"
-                      className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
-                    >
-                      Órdenes
-                    </Link>
-
-                    <Link
-                      href="/Cashier/CashierEvent"
-                      className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
-                    >
-                      Caja
-                    </Link>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="mb-5">
-            <button
-              type="button"
-              onClick={() => setTeamOpen((value) => !value)}
-              className="flex w-full cursor-pointer items-center justify-between px-1 text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
-            >
-              <span className="flex items-center gap-3">
-                <span className="text-[#6b35f5]">
-                  <MenuIcon />
-                </span>
-                Administrar Equipo
-              </span>
-
-              <span className="text-[#6b35f5]">
-                <Chevron open={teamOpen} />
-              </span>
-            </button>
-
-            {teamOpen ? (
-              <div className="mt-5 space-y-5 pl-[35px]">
-                <Link
-                  href="/Users"
-                  className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
-                >
-                  Usuarios
-                </Link>
-
-                <Link
-                  href="/Role"
-                  className="block text-[15px] font-normal text-[#1f2337] transition hover:text-[#6b35f5]"
-                >
-                  Roles
-                </Link>
-              </div>
-            ) : null}
-          </div>
+                {item.description}
+              </Link>
+            )
+          )}
         </nav>
 
         <button

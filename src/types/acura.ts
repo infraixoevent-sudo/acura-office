@@ -539,16 +539,23 @@ export interface LogInR {
   message: string;
   tkn: string;
   userMenu?: UserMenu[];
-  IdOrganizer: number;
+  idOrganizer: number;
+  nameRol?: string;
 }
 
+// Wire final camelCase real de ACURA-USERS/api/LogIn (espejo de Query.GetMenuByIdUser):
+// árbol de vistas del rol vigente, un solo nivel de anidamiento (las vistas con
+// main > 0 cuelgan de childMenu de su vista padre).
 export interface UserMenu {
-  Description: string;
-  URL: string;
-  IsMenu: boolean;
-  IsMain: boolean;
-  Main: number;
+  idView: number;
+  description: string;
+  url: string;
+  isMenu: boolean;
+  isMain: boolean;
+  main: number;
   childMenu?: UserMenu[];
+  idRol: number;
+  nameRol: string;
 }
 
 export interface RecoverPasswowordR {
