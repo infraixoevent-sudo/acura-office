@@ -15,7 +15,7 @@
 | /Admin/Applications (+detalle) | `Admin/Applications.razor` + `ApplicationDetails.razor` | GetOrganizer · GetOrganizerByIdOrganizer · UpdateStatusOrganizerApplication | EVENTS | ✅ Endurecidos en F5/F6 (transacción + correo con mailer); wire por conciliar fino |
 | /Events | `Events.razor` | GetAdminEvents | EVENTS | ✅ Probado en producción por /ReportsByEvent (dropdown) |
 | /Dashboard | `DashBoard.razor` | GetDashboardEvents | EVENTS | Existe con validación; re-migrar wire por protocolo |
-| /Cashier/CashierEvent | `Cashier/CashierEvent.razor` | GetCashierEvents · GetTicketByFolio | EVENTS | Existen; re-migrar wire. ⚠️ El flujo de caja COMPLETO (Payment/Ticketing) desemboca en FullPayment — estacionado |
+| /Cashier/CashierEvent | `Cashier/CashierEvent.razor` | GetCashierEvents · GetTicketByFolio | EVENTS | ✅ Re-migrados a wire final (ACURA-EVENTS PR #23) + página real (este PR). ⚠️ El flujo de caja COMPLETO (Payment/Ticketing) desemboca en FullPayment — sigue estacionado |
 | /CreateEvent | `CreateEvent.razor` | CreateEvent · CreateTicket(→USERS CreateTickets) · GetEventCategory · GetNeighborhoodsByZipCode | EVENTS · USERS | Existen. ⚠️ **Revisar EventImage**: el request Blazor manda imagen y el `createEvent` del Next no la procesa (probable GAP tipo FullPayment — verificar contra el C# si sube a MULTIMEDIA → podría quedar estacionado) |
 
 ## Orden recomendado (valor ÷ riesgo)

@@ -11,12 +11,34 @@ export interface RCancelEvent {
   Comment?: string;
 }
 
-export interface RCashierEvent {
-  IdOrganizer: number;
-  Name?: string;
-  Date?: string;
-  IdState?: number;
-  Page: number;
+// Re-migrado (Protocolo R1-R7, ACURA-EVENTS PR #23): wire final camelCase,
+// sustituye el RCashierEvent/CashierEventR/EventsOrganizerListCashier
+// PascalCase auto-migrado (sin otro consumidor en el repo).
+export interface RGetCashierEvents {
+  idOrganizer: number;
+  name?: string;
+  date?: string;
+  idState?: number;
+  page: number;
+}
+
+export interface CashierEventItem {
+  idEvent: number;
+  eventName: string;
+  eventDateTime: string;
+  eventAddress: string;
+  idEventStatus: number;
+  eventStatus: string;
+  soldTickets: number;
+  availableTickets: number;
+}
+
+export interface GetCashierEventsR {
+  code: boolean;
+  message: string | null;
+  cashierEvents?: CashierEventItem[];
+  totalDeRegistros?: number;
+  totalDePaginas?: number;
 }
 
 export interface RCreateEvent {
@@ -175,8 +197,10 @@ export interface RGetInvoice {
   folio: number;
 }
 
+// Re-migrado (Protocolo R1-R7, ACURA-EVENTS PR #23): wire final camelCase.
 export interface RGetTicketByFolio {
-  Folio: string;
+  folio: number;
+  offset?: number;
 }
 
 export interface RGetUserbyEmail {
@@ -240,33 +264,6 @@ export interface RUpdateTicket {
 export interface RUserRoles {
   idOrganizer: number;
   page: number;
-}
-
-export interface CashierEventR {
-  Code: boolean;
-  Message?: string;
-  cashierEvents?: EventsOrganizerListCashier[];
-}
-
-export interface EventsOrganizerListCashier {
-  IdEvent: number;
-  Name?: string;
-  DateAndTime?: string;
-  Address?: string;
-  SoldTickets: number;
-  AvailableTickets: number;
-  EventStatus: string;
-  IdEventStatus: number;
-}
-
-export interface StatusCashier {
-  IdStatus: string;
-  StatusName?: string;
-}
-
-export interface StatesCashier {
-  IdState: number;
-  StateName?: string;
 }
 
 // Wire final camelCase (ACURA-EVENTS, GetEventCategory) — espejo de
@@ -589,17 +586,19 @@ export interface NeighborhoodDetails {
   Description: string;
 }
 
+// Re-migrado (Protocolo R1-R7, ACURA-EVENTS PR #23): wire final camelCase.
 export interface GetTicketByFolioR {
-  Code: boolean;
-  Message: string;
-  ticketFolio: ticketFolio[];
+  code: boolean;
+  message: string | null;
+  ticketFolio?: TicketFolioItem[];
 }
 
-export interface ticketFolio {
-  Folio: number;
-  IdTicketClass: number;
-  FolioQuantity: number;
-  IdEvent: number;
+export interface TicketFolioItem {
+  folio: number;
+  idTicketClass: number;
+  folioQuantity: number;
+  idEvent: number;
+  isCancelled: number;
 }
 
 // Wire final camelCase (Protocolo R1-R7): UserbyMailR del C# serializa userName/idUser.
