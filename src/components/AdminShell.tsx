@@ -1,21 +1,76 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useStoredUserMenu } from "@/lib/userMenu";
+import type { UserMenu } from "@/types/acura";
 
-// Shell para las rutas /Admin/* — paridad con AdminLayout.razor del Blazor
-// (chrome y sesión distintos de MainLayout, que ya usa AppShell). El Blazor
-// arma su nav desde "Menu" (catálogo de roles/vistas por usuario); aquí se
-// arranca con un nav estático que se amplía en cada ruta nueva del punto 6
-// (backend-standards.md, Protocolo R1-R7) — el catálogo dinámico de roles
-// es una migración aparte, no bloquea estas páginas.
-const NAV_ITEMS: { label: string; href: string }[] = [
-  { label: "Organizadores", href: "/Admin/List-of-organizers" },
-];
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+    >
+      <path
+        d="M6 9L12 15L18 9"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// Grupo con hijos — espejo de AdminLayout.razor: a diferencia de MainLayout,
+// el original no dedupea (`lista_menu` se recorre tal cual, sin
+// GroupBy/DistinctBy) y el bloque de hijos nace expandido
+// (`class="collapse show"`, no atado a la ruta activa).
+function NavGroup({ item, pathname }: { item: UserMenu; pathname: string | null }) {
+  const [open, setOpen] = useState(true);
+  const children = item.childMenu ?? [];
+
+  return (
+    <div className="mb-5">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full cursor-pointer items-center justify-between px-1 text-[15px] font-bold text-[#302a45] transition hover:text-[#6b35f5]"
+      >
+        {item.description}
+
+        <span className="text-[#6b35f5]">
+          <Chevron open={open} />
+        </span>
+      </button>
+
+      {open ? (
+        <div className="mt-5 space-y-5 pl-[35px]">
+          {children.map((subItem) => (
+            <Link
+              key={subItem.idView}
+              href={subItem.url}
+              className={`block text-[15px] font-normal transition hover:text-[#6b35f5] ${
+                pathname === subItem.url ? "text-[#6b35f5]" : "text-[#1f2337]"
+              }`}
+            >
+              {subItem.description}
+            </Link>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const userMenu = useStoredUserMenu();
 
   function logout() {
     localStorage.clear();
@@ -44,17 +99,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 px-4">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`mb-5 block px-1 text-[15px] font-bold transition hover:text-[#6b35f5] ${
-                pathname === item.href ? "text-[#6b35f5]" : "text-[#302a45]"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {userMenu.map((item) =>
+            item.isMain && (item.childMenu?.length ?? 0) === 0 ? (
+              <Link
+                key={item.idView}
+                href={item.url}
+                className={`mb-5 block px-1 text-[15px] font-bold transition hover:text-[#6b35f5] ${
+                  pathname === item.url ? "text-[#6b35f5]" : "text-[#302a45]"
+                }`}
+              >
+                {item.description}
+              </Link>
+            ) : (
+              <NavGroup key={item.idView} item={item} pathname={pathname} />
+            )
+          )}
         </nav>
 
         <button
