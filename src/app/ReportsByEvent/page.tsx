@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Pagination } from "@/components/Pagination";
-import { getStoredToken, postLegacy } from "@/lib/apiClient";
+import { postLegacy } from "@/lib/apiClient";
+import { useSessionGuard } from "@/lib/useSessionGuard";
 import type {
   EventsOrganizerList,
   EventsR,
@@ -16,11 +17,11 @@ import type {
 const PAGE_SIZE = 10;
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const SELECT_EVENT_PLACEHOLDER: EventsOrganizerList = {
-  IdEvent: 0,
-  Name: "Selecciona un evento",
-  SoldTickets: 0,
-  AvailableTickets: 0,
-  IdStatus: 0,
+  idEvent: 0,
+  name: "Selecciona un evento",
+  soldTickets: 0,
+  availableTickets: 0,
+  idStatus: 0,
 };
 
 function formatMoney(value: number) {
@@ -52,10 +53,7 @@ export default function Page() {
   const [pdfUrl, setPdfUrl] = useState("");
   const [idOrderSelected, setIdOrderSelected] = useState(0);
 
-  const idOrganizer = useMemo(() => {
-    if (typeof window === "undefined") return 0;
-    return Number(localStorage.getItem("IdOrganizer")) || 0;
-  }, []);
+  const { session, error: sessionError } = useSessionGuard();
 
   const idUser = useMemo(() => {
     if (typeof window === "undefined") return 0;
@@ -63,26 +61,29 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    async function loadEvents() {
-      try {
-        const response = await postLegacy<EventsR, REvents>(
-          "GetAdminEvents",
-          { IdOrganizer: idOrganizer, IdStatus: "", Name: "", Date: "" },
-          getStoredToken()
-        );
+    if (session) loadEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
 
-        const adminEvents = (response.adminEvents ?? [])
-          .slice()
-          .sort((a, b) => (a.Name ?? "").localeCompare(b.Name ?? ""));
+  async function loadEvents() {
+    if (!session) return;
 
-        setEvents([SELECT_EVENT_PLACEHOLDER, ...adminEvents]);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
+    try {
+      const response = await postLegacy<EventsR, REvents>(
+        "GetAdminEvents",
+        { idOrganizer: session.idOrganizer },
+        session.token
+      );
+
+      const adminEvents = (response.adminEvents ?? [])
+        .slice()
+        .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+
+      setEvents([SELECT_EVENT_PLACEHOLDER, ...adminEvents]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
-
-    loadEvents();
-  }, [idOrganizer]);
+  }
 
   function validate() {
     if (!selectedEventId) {
@@ -105,6 +106,8 @@ export default function Page() {
   }
 
   async function fetchReport(targetPage: number) {
+    if (!session) return;
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -134,7 +137,7 @@ export default function Page() {
           page: targetPage,
           pageSize: PAGE_SIZE,
         },
-        getStoredToken()
+        session.token
       );
 
       setTickets(response.tickets ?? []);
@@ -178,6 +181,22 @@ export default function Page() {
     setPdfUrl("");
   }
 
+  if (sessionError) {
+    return (
+      <AppShell>
+        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{sessionError}</div>
+      </AppShell>
+    );
+  }
+
+  if (!session) {
+    return (
+      <AppShell>
+        <p className="py-10 text-center text-sm text-slate-400">Cargando...</p>
+      </AppShell>
+    );
+  }
+
   return (
     <AppShell>
       <div className="pb-10">
@@ -206,8 +225,8 @@ export default function Page() {
               className="h-[58px] w-full rounded-lg border border-slate-300 bg-white px-4 text-sm text-slate-900"
             >
               {events.map((item) => (
-                <option key={item.IdEvent} value={item.IdEvent}>
-                  {item.Name}
+                <option key={item.idEvent} value={item.idEvent}>
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -354,11 +373,11 @@ export default function Page() {
                       {ticket.quantity}
                     </td>
                     <td className="px-4 py-5 text-center">
-                      {ticket.pdfUrl ? (
+                      {ticket.pdfurl ? (
                         <button
                           type="button"
                           title="Ver Reporte"
-                          onClick={() => openPdf(ticket.pdfUrl, ticket.idOrder)}
+                          onClick={() => openPdf(ticket.pdfurl, ticket.idOrder)}
                           className="inline-flex cursor-pointer items-center justify-center rounded-lg p-1 hover:bg-slate-100"
                         >
                           <img src="/img/eye.svg" width={20} height={20} alt="Ver Reporte" />
