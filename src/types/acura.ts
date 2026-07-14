@@ -140,9 +140,35 @@ export interface RGetCommissionByOrganizer {
   IdOrganizer: number;
 }
 
+// Re-migrado (Protocolo R1-R7): wire final camelCase de ACURA-EVENTS
+// (GetDashboardEvents), espejo de GetDashboardRequest/DtoDashboardEvent del
+// Next (ver ACURA-EVENTS PR #22). message es null en el camino de éxito
+// (ResponseGeneric.message nunca se asigna ahí en el C#); eventDateStart/
+// eventDateSale llegan en formato "yyyy/MM/dd HH:mm:ss" (con slashes), y
+// eventDateSale es el string literal "0" cuando no hay VisibilityStartDate.
 export interface RGetDashboardEvents {
-  IdOrganizer: number;
-  Page: number;
+  idOrganizer: number;
+  page: number;
+}
+
+export interface DashboardEventItem {
+  idEvent: number;
+  eventName: string;
+  soldTickets: number;
+  availableTickets: number;
+  totalTickets: number;
+  eventProfits: number;
+  eventDateStart: string;
+  eventDateSale: string;
+  eventPercentage: number;
+}
+
+export interface GetDashboardEventsR {
+  code: boolean;
+  message: string | null;
+  dashboardEvents?: DashboardEventItem[];
+  totalDePaginas?: number;
+  totalDeRegistros?: number;
 }
 
 export interface RGetInvoice {
