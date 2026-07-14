@@ -6,7 +6,7 @@ alwaysApply: true
 
 # Configuración y Mejores Prácticas del Proyecto Frontend acura-office
 
-> **Documento canónico del front** (v2, 2026-07-12). Maestro en `C:\wrkia\frontend-standards-office.md`; sustituye a `frontend-standards.md` (ahora un apuntador). La re-migración de rutas sigue el plan de `C:\wrkia\plan-migracion-rutas-office.md` y va en el mismo ciclo que la re-migración de sus endpoints (protocolo R1-R7 de `backend-standards.md`).
+> **Documento canónico del front** (v2, 2026-07-12). La fuente de verdad es este archivo (`docs/frontend-standards.md` del repo acura-office) — no existe un maestro fuera del repositorio. La re-migración de rutas sigue el plan de `docs/plan-migracion-rutas-office.md` y va en el mismo ciclo que la re-migración de sus endpoints (protocolo R1-R7 del `docs/backend-standards.md` de cada repo API).
 
 ## Tabla de Contenidos
 
