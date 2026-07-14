@@ -106,10 +106,12 @@ export interface REventPublication {
 }
 
 // Re-migrado (Protocolo R1-R7): wire final camelCase de ACURA-EVENTS
-// (GetAdminEvents), espejo de DtoAdminEvents/ResponseGeneric del C#.
+// (GetAdminEvents), espejo de GetAdminEventsRequest del Next (no de REvents.cs
+// del Blazor original, que mandaba idStatus como string — ver ACURA-EVENTS
+// PR #16, ya wire final; el office nuevo llama directo a ese contrato).
 export interface REvents {
   idOrganizer: number;
-  idStatus?: string;
+  idStatus?: number;
   name?: string;
   date?: string;
   idState?: number;
@@ -307,6 +309,8 @@ export interface EventsR {
   code: boolean;
   message?: string;
   adminEvents?: EventsOrganizerList[];
+  totalDePaginas?: number;
+  totalDeRegistros?: number;
 }
 
 export interface EventsOrganizerList {
