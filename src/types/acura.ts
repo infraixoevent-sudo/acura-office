@@ -768,3 +768,114 @@ export interface OrganizerRoleActionR {
   code: boolean;
   message: string;
 }
+
+// Wire final camelCase (Protocolo R1-R7) — cluster PaymentHistory (ADMIN).
+
+export interface RGetOrganizers {
+  // sin request body — POST plano
+}
+
+export interface OrganizerListItem {
+  idOrganizer: number;
+  name: string | null;
+}
+
+export interface GetOrganizersR {
+  code: boolean;
+  message: string;
+  organizers: OrganizerListItem[];
+}
+
+export interface RGetEventsByOrganizer {
+  idOrganizer: number;
+}
+
+export interface OrganizerEventListItem {
+  idEvent: number;
+  name: string;
+}
+
+export interface GetEventsByOrganizerR {
+  code: boolean;
+  message: string;
+  events: OrganizerEventListItem[];
+}
+
+export interface RGetSaldoByEvent {
+  idEvent: number;
+}
+
+// balanceTransfered conserva el typo real del C# (Transfer**ed**, sin doble r).
+export interface GetSaldoByEventR {
+  code: boolean;
+  message: string;
+  balanceTotal: number;
+  balanceTransfered: number;
+}
+
+export interface RGetTransferByEvent {
+  idEvent: number;
+  startDate?: string;
+  endDate?: string;
+  page: number;
+}
+
+export interface EventTransferItem {
+  idTransfer: number;
+  transferDate: string;
+  amount: number;
+  bankTransactionNumber: string | null;
+  ticketsSold: number;
+}
+
+export interface GetTransferByEventR {
+  code: boolean;
+  message: string;
+  eventTransfers: EventTransferItem[];
+  totalRecords: number;
+  totalPages: number;
+}
+
+export interface RGetTransferDetails {
+  idTransfer: number;
+}
+
+export interface TransferTicketItem {
+  name: string | null;
+  quantity: number;
+  amount: number;
+}
+
+export interface TransferCommissionItem {
+  description: string | null;
+  value: number;
+}
+
+export interface GetTransferDetailsR {
+  code: boolean;
+  message: string;
+  eventName?: string;
+  bankTransactionNumber?: string | null;
+  transferDate?: string | null;
+  transferReceiptUrl?: string | null;
+  tickets?: TransferTicketItem[] | null;
+  subtotal?: number;
+  commissions?: TransferCommissionItem[] | null;
+  total?: number;
+}
+
+// El backend recalcula qué órdenes cubre la transferencia — idOrderLst del
+// cliente no existe en el request final (ver ACURA-ADMIN transfer.service.ts).
+export interface RRegisterTransferToOrganizer {
+  idEvent: number;
+  amount: number;
+  createDate?: string;
+  idUserMaster: number;
+  idTransaccion?: string;
+  fileTransferRecipient?: string;
+}
+
+export interface RegisterTransferR {
+  code: boolean;
+  message: string;
+}
