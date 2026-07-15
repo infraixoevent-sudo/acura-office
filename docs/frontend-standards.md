@@ -101,7 +101,7 @@ acura-office/
 │   │   │   ├── CashierEvent/page.tsx
 │   │   │   ├── Payment/page.tsx
 │   │   │   └── Ticketing/page.tsx
-│   │   ├── DashBoard/page.tsx  # Tablero del organizador
+│   │   ├── Dashboard/page.tsx  # Tablero del organizador
 │   │   ├── Events/page.tsx     # Mis eventos
 │   │   ├── CreateEvent/page.tsx
 │   │   ├── Tickets/page.tsx
@@ -159,7 +159,7 @@ El dominio es la **gestión y venta de boletos para eventos**. Usar de forma con
 
 **Convenciones de nomenclatura:**
 
-- **Carpetas de ruta**: Usar PascalCase replicando la página Blazor de origen (p. ej., `CreateEvent/`, `DashBoard/`, `Cashier/TicketingFolio/`)
+- **Carpetas de ruta**: Usar PascalCase replicando la página Blazor de origen (p. ej., `CreateEvent/`, `Dashboard/`, `Cashier/TicketingFolio/`)
 - **Carpetas de API Routes**: Usar el nombre exacto del endpoint legacy (p. ej., `api/GetAdminEvents/`, `api/sendRecoverPasswordEmail/`)
 - **Nomenclatura de Componentes**: Usar PascalCase para componentes React (p. ej., `AppShell`, `EndpointForm`, `EndpointTable`)
 - **Nomenclatura de Variables**: Usar camelCase para variables y funciones (p. ej., `eventsOpen`, `getStoredToken`, `proxyLegacyEndpoint`)
@@ -493,9 +493,9 @@ export interface GetTicketsReportR {
 
 ### Patrones de Navegación
 - Usar **`next/link`** (`<Link href="...">`) para la navegación declarativa del menú
-- Usar **`useRouter` de `next/navigation`** para navegación programática (p. ej., `router.push("/DashBoard")` tras el login)
+- Usar **`useRouter` de `next/navigation`** para navegación programática (p. ej., `router.push("/Dashboard")` tras el login)
 - Usar **`usePathname`** para resaltar/expandir la sección activa del menú en `AppShell`
-- Las rutas reflejan los nombres PascalCase de las carpetas: `/DashBoard`, `/CreateEvent`, `/Cashier/CashierEvent`
+- Las rutas reflejan los nombres PascalCase de las carpetas: `/Dashboard`, `/CreateEvent`, `/Cashier/CashierEvent`
 
 ```tsx
 import Link from "next/link";

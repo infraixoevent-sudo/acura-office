@@ -1,6 +1,6 @@
 window.id_url = function () {
     var url = window.location.pathname;
-    if (url == "/DashBoard") {
+    if (url == "/Dashboard") {
         var elemento = document.getElementById("boleto");
         elemento.className += " tab--active ";
     }
@@ -139,7 +139,7 @@ function cargaCP() {
 
 
 function identifyURL(url) {
-    if (url == "/DashBoard") {
+    if (url == "/Dashboard") {
         var elemento = document.getElementById("boleto");
         elemento.className += " tab--active ";
     }

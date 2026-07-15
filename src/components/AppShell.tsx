@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { dedupeByDescription, subtreeContainsPath, useStoredUserMenu } from "@/lib/userMenu";
@@ -158,9 +158,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const userMenu = useStoredUserMenu();
   const menuItems = dedupeByDescription(userMenu);
+  const [isMounted, setIsMounted] = useState(false);
 
   const name = typeof window !== "undefined" ? localStorage.getItem("Name") : null;
   const nameRol = typeof window !== "undefined" ? localStorage.getItem("NameRol") : null;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   function logout() {
     localStorage.clear();
@@ -189,10 +194,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="min-w-0">
             <p className="truncate text-[15px] font-extrabold leading-5 text-black">
-              {name ?? "Organizador"}
+              {isMounted ? (name ?? "Organizador") : "Organizador"}
             </p>
             <p className="text-[14px] leading-4 text-[#003a8c]">
-              {nameRol ?? "Organizador de Eventos"}
+              {isMounted ? (nameRol ?? "Organizador de Eventos") : "Organizador de Eventos"}
             </p>
           </div>
         </div>
