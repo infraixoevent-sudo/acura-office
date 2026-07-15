@@ -55,7 +55,7 @@ export default function LoginPage() {
       }
 
       setSessionValues(data);
-      router.push("/DashBoard");
+      router.push("/Dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {

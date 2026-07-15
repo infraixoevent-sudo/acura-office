@@ -8,7 +8,7 @@ import { postLegacy } from "@/lib/apiClient";
 import { useSessionGuard } from "@/lib/useSessionGuard";
 import type { DashboardEventItem, GetDashboardEventsR, RGetDashboardEvents } from "@/types/acura";
 
-// Espejo del switch de color en DashBoard.razor (index 1..5 sobre las
+// Espejo del switch de color en Dashboard.razor (index 1..5 sobre las
 // primeras 4 tarjetas — boardsEventsGraphics = boardsEvents.Take(4)).
 const CARD_COLORS = ["#4B52FF", "#562BD2", "#00CC66", "#00CC66"];
 
